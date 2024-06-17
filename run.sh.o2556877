@@ -1,0 +1,186 @@
+
+########################################################################
+#      Date:           Mon Jun 17 04:16:23 AM PDT 2024
+#    Job ID:           2556877.v-qsvr-1.aidevcloud
+#      User:           u210166
+# Resources:           cput=75:00:00,neednodes=1:gpu:ppn=2,nodes=1:gpu:ppn=2,walltime=06:00:00
+########################################################################
+
+Running on device: Intel(R) UHD Graphics
+Vector size: 262144
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[262143]: 262143 + 262143 = 524286
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 1048576
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[1048575]: 1048575 + 1048575 = 2097150
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 4194304
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[4194303]: 4194303 + 4194303 = 8388606
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 16777216
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[16777215]: 16777215 + 16777215 = 33554430
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 134217728
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[134217727]: 134217727 + 134217727 = 268435454
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 268435456
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[268435455]: 268435455 + 268435455 = 536870910
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 536870912
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[536870911]: 536870911 + 536870911 = 1073741822
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 1073741824
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[1073741823]: 1073741823 + 1073741823 = 2147483646
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 262144
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[262143]: 262143 + 262143 = 524286
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 1048576
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[1048575]: 1048575 + 1048575 = 2097150
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 4194304
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[4194303]: 4194303 + 4194303 = 8388606
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 16777216
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[16777215]: 16777215 + 16777215 = 33554430
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 134217728
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[134217727]: 134217727 + 134217727 = 268435454
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 268435456
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[268435455]: 268435455 + 268435455 = 536870910
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 536870912
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[536870911]: 536870911 + 536870911 = 1073741822
+Vector add successfully completed on device.
+Running on device: Intel(R) UHD Graphics
+Vector size: 1073741824
+[0]: 0 + 0 = 0
+[1]: 1 + 1 = 2
+[2]: 2 + 2 = 4
+...
+[1073741823]: 1073741823 + 1073741823 = 2147483646
+Vector add successfully completed on device.
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 262144
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 1048576
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 4194304
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 16777216
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 134217728
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 268435456
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 536870912
+add
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 262144
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 1048576
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 4194304
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 16777216
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 134217728
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 268435456
+add
+Running on device: Intel(R) UHD Graphics
+Vector size: 536870912
+add
+
+########################################################################
+# End of output for job 2556877.v-qsvr-1.aidevcloud
+# Date: Mon Jun 17 04:17:18 AM PDT 2024
+########################################################################
+
