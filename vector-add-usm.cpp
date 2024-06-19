@@ -68,7 +68,7 @@ double VectorAdd(queue &q, const int *a, const int *b, int *sum, size_t size) {
 
   // q.parallel_for() is an asynchronous call. SYCL runtime enqueues and runs
   // the kernel asynchronously. Wait for the asynchronous call to complete.
-  e.wait();
+ // e.wait();
   return(e.template get_profiling_info<info::event_profiling::command_end>() -
        e.template get_profiling_info<info::event_profiling::command_start>());
 }
@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
     myfile.open(filename);
     myfile.seekg (0, std::ios::end);
 
-    myfile <<"usm_add"<<";"<< vector_size<<";"<<runtime_event /1000000<<";"<<runtime_chrono/1000 <<";-"<<std::endl;
+    myfile <<"usm_add_nosync"<<";"<< vector_size<<";"<<runtime_event /1000000<<";"<<runtime_chrono/1000 <<";-"<<std::endl;
 
     free(a, q);
     free(b, q);

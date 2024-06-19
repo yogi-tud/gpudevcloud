@@ -82,7 +82,7 @@ double  CopyVec(queue &q, const IntVector &a_vector,
     });
   
   // Wait until compute tasks on GPU done
-  q.wait();
+  //q.wait();
  // return(e.template get_profiling_info<info::event_profiling::command_end>() -
   //     e.template get_profiling_info<info::event_profiling::command_start>());
   return -1.;
@@ -121,7 +121,7 @@ double  VectorAdd(queue &q, const IntVector &a_vector, const IntVector &b_vector
     });
   
   // Wait until compute tasks on GPU done
-  q.wait();
+//  q.wait();
   return(e.template get_profiling_info<info::event_profiling::command_end>() -
        e.template get_profiling_info<info::event_profiling::command_start>());
    
@@ -139,12 +139,12 @@ void InitializeVector(IntVector &a) {
 //************************************
 int main(int argc, char* argv[]) {
   // Change num_repetitions if it was passed as argument
-  std::string kernel = "add";
+  std::string kernel = "nosync_add";
   if (argc > 2) kernel = argv[2];
 
   if(kernel == "add")
   {
-    std::cout<<"add"<<std::endl;
+    std::cout<<"nosync_add"<<std::endl;
   }
 
   else if (kernel == "copy")

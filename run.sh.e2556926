@@ -1,0 +1,6 @@
+terminate called after throwing an instance of 'sycl::_V1::runtime_error'
+  what():  Native API failed. Native API returns: -61 (PI_ERROR_INVALID_BUFFER_SIZE) -61 (PI_ERROR_INVALID_BUFFER_SIZE)
+/var/spool/torque/mom_priv/jobs/2556926.v-qsvr-1.aidevcloud.SC: line 25: 2724570 Aborted                 (core dumped) ./gpu 4096 add
+terminate called after throwing an instance of 'sycl::_V1::runtime_error'
+  what():  Native API failed. Native API returns: -61 (PI_ERROR_INVALID_BUFFER_SIZE) -61 (PI_ERROR_INVALID_BUFFER_SIZE)
+/var/spool/torque/mom_priv/jobs/2556926.v-qsvr-1.aidevcloud.SC: line 33: 2724603 Aborted                 (core dumped) ./gpu 4096 add
