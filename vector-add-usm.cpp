@@ -24,6 +24,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <omp.h>
+#define NUM_THREADS 4  
 
 #if FPGA_HARDWARE || FPGA_EMULATOR || FPGA_SIMULATOR
 #include <sycl/ext/intel/fpga_extensions.hpp>
@@ -31,10 +33,14 @@
 
 using namespace sycl;
 
+int n_per_thread;                   // elements per thread
+int total_threads = NUM_THREADS;    // number of threads to use  
+
 
 // Array size for this example.
 size_t mib = 1;
 size_t vector_size = 262144 ;
+size_t  gpu_percent = 0;
 
 // Create an exception handler for asynchronous SYCL exceptions
 static auto exception_handler = [](sycl::exception_list e_list) {
@@ -131,6 +137,13 @@ int main(int argc, char* argv[]) {
     // Initialize input arrays with values from 0 to array_size - 1
     InitializeArray(a, vector_size);
     InitializeArray(b, vector_size);
+    int i;
+    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(static, n_per_thread)
+        for( i=0; i<vector_size; i++) {
+		sum_parallel[i] = a[i]+b[i];
+		// Which thread am I? Show who works on what for this samll example
+//		printf("Thread %d works on element%d\n", omp_get_thread_num(), i);
+        }
 
     // Compute the sum of two arrays in sequential for validation.
     for (size_t i = 0; i < vector_size; i++) sum_sequential[i] = a[i] + b[i];
