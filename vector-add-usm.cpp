@@ -275,7 +275,7 @@ int main(int argc, char* argv[]) {
       auto t1 = std::chrono::steady_clock::now();
        #pragma omp parallel num_threads(conf.omp_threads)
   {
-    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(static, n_per_thread), 
+    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(dynamic, n_per_thread), 
         for( i=0; i<conf.vector_size; i++) {
 		sum_parallel[i] = a[i]+b[i];
         }
