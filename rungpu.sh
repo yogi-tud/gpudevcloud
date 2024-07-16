@@ -1,1 +1,14 @@
-./gpuusm 64
+./gpuusm -k 1 -o gpu.csv -d gpu
+./gpuusm -k 4 -o gpu.csv -d gpu
+./gpuusm -k 16 -o gpu.csv -d gpu
+./gpuusm -k 32 -o gpu.csv -d gpu
+./gpuusm -k 128 -o gpu.csv -d gpu
+./gpuusm -k 512 -o gpu.csv -d gpu
+./gpuusm -m 1 -o gpu.csv -d gpu
+./gpuusm -m 4 -o gpu.csv -d gpu
+./gpuusm -m 16 -o gpu.csv -d gpu
+./gpuusm -m 32 -o gpu.csv -d gpu
+./gpuusm -m 128 -o gpu.csv -d gpu
+./gpuusm -m 512 -o gpu.csv -d gpu
+./gpuusm -m 1024 -o gpu.csv -d gpu
+./gpuusm -m 2048 -o gpu.csv -d gpu

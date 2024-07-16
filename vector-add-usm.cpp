@@ -267,10 +267,13 @@ int main(int argc, char* argv[]) {
    int n_per_thread = vector_size / conf.omp_threads;
 
       auto t1 = std::chrono::steady_clock::now();
-    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(static, n_per_thread)
+       #pragma omp parallel num_threads(conf.omp_threads)
+  {
+    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(static, n_per_thread), 
         for( i=0; i<conf.vector_size; i++) {
 		sum_parallel[i] = a[i]+b[i];
         }
+  }
   auto t2 = std::chrono::steady_clock::now();
   timer.runtime_omp =std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
   
