@@ -10,7 +10,7 @@
 using namespace sycl;
 
 
-typedef enum {gpu, cpu, multithread} processmode;
+typedef enum {gpu, cpu, multithread} hardware;
 
 
 struct config
@@ -21,7 +21,8 @@ struct config
  size_t mib=0;
  bool usm=true;
  bool do_validation=true;
- processmode mode=cpu;
+ hardware hw=cpu;
+ std::string device_str = "cpu";
  std::string filename = "add_gpu.csv";
  float share_cpu =100.f;
 };
@@ -57,7 +58,7 @@ static auto exception_handler = [](sycl::exception_list e_list) {
 /**
  * -k size in KiB
  * -m size in MiB
- * -mode processing mode cpu, gpu, ts (multithread)  cpu selects sycl cpu, gpu sycl gpu. ts combines gpu and omp cpu
+ * -d device sycl cpu or gpu
  * --nv no validation
  * -o output filename
  * -s share cpu [0 .. 100%]
@@ -106,18 +107,19 @@ config ParseInputParams (int argc, char** argv)
             
         }
 
-         else if (strcmp(w_arg, "-mode") == 0) {
+         else if (strcmp(w_arg, "-d") == 0) {
             w_argc--;
             std::string mode_input = n_arg;
             
             if(mode_input.compare("cpu") ==0)
-            conf.mode = cpu;
+            conf.hw = cpu;
+            conf.device_str ="cpu";
 
             if(mode_input.compare("gpu") ==0)
-            conf.mode = gpu;
+            conf.hw = gpu;
+            conf.device_str ="gpu";
 
-            if(mode_input.compare("ts") ==0)
-            conf.mode = multithread;
+            
         }
 
         else if (strcmp(w_arg, "-o") == 0) {
@@ -183,7 +185,7 @@ void InitializeArray(int *a, size_t size, bool usm) {
   void printcfg (config conf)
   {
     std::cout<<"PRINT CONFIG"<<std::endl;
-    std::cout<<"mode: "<<conf.mode<<std::endl;
+    std::cout<<"mode: "<<conf.hw<<std::endl;
     std::cout<<"kib: " <<conf.kib<<std::endl;
     std::cout<<"mib: " <<conf.mib<<std::endl;
     std::cout<<"vector_size: " <<conf.vector_size<<std::endl;
@@ -194,14 +196,14 @@ void InitializeArray(int *a, size_t size, bool usm) {
 
   }
 
-  bool validate (int * a, int * b, int * sum_sequential, int * device, size_t size)
+  bool validate (int * a, int * b, int * sum_sequential, int * data_device, size_t size)
   {
     //perform operation on host
     for (size_t i = 0; i < size; i++) sum_sequential[i] = a[i] + b[i];
 
     // Verify that the two arrays are equal.
     for (size_t i = 0; i < size; i++) {
-      if (device[i] != sum_sequential[i]) {
+      if (data_device[i] != sum_sequential[i]) {
         std::cout << "Vector add failed on device. at index "<<i<<"\n";
         return false;
       }
@@ -222,7 +224,7 @@ int main(int argc, char* argv[]) {
  
   auto selector = sycl::cpu_selector_v;
 
-  if(conf.mode == processmode::gpu)
+  if(conf.hw == gpu)
    selector = sycl::gpu_selector_v;
 
 
@@ -295,7 +297,7 @@ int main(int argc, char* argv[]) {
 
         std::ofstream myfile_out(conf.filename);
 
-        myfile_out << "benchmark;datasize;time_ms_event;time_ms_chrono;time_ms_omp_chrono;omp_threads" << std::endl;
+        myfile_out << "benchmark;datasize;device;time_ms_event;time_ms_chrono;time_ms_omp_chrono;omp_threads" << std::endl;
 
 
         myfile_out.close();
@@ -305,8 +307,9 @@ int main(int argc, char* argv[]) {
     myfile.open(conf.filename);
     myfile.seekg (0, std::ios::end);
 
-    myfile <<"usm_add"<<";"<< conf.vector_size<<";"<<timer.runtime_event_ms /1000000<<";"<<timer.runtime_chrono_ms/1000 
-    
+    myfile <<"usm_add"<<";"<< conf.vector_size
+    <<";"<<conf.device_str
+    <<";"<<timer.runtime_event_ms /1000000<<";"<<timer.runtime_chrono_ms/1000 
     <<";"<< timer.runtime_omp/1000 
     <<";"<< conf.omp_threads
     
