@@ -112,12 +112,18 @@ config ParseInputParams (int argc, char** argv)
             std::string mode_input = n_arg;
             
             if(mode_input.compare("cpu") ==0)
+             {
+
             conf.hw = cpu;
             conf.device_str ="cpu";
+            }
 
             if(mode_input.compare("gpu") ==0)
+            {
             conf.hw = gpu;
             conf.device_str ="gpu";
+            }
+            
 
             
         }
