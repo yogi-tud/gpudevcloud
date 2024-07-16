@@ -35,6 +35,7 @@ size_t num_repetitions = 1;
 size_t mib = 1;
 // size in mib for 32 bit elements
 size_t vector_size = 262144  ; 
+
 typedef std::vector<int> IntVector; 
 
 // Create an exception handler for asynchronous SYCL exceptions
@@ -159,7 +160,7 @@ int main(int argc, char* argv[]) {
   // Change vector_size if it was passed as argument
   if (argc > 1) mib = std::stoi(argv[1]);
   // Create device selector for the device of your interest.
-
+//vector_size = 256  ; 
   vector_size *= mib ; 
   
   auto selector = sycl::gpu_selector_v; //select gpu

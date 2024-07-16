@@ -8,11 +8,11 @@
 
 class kernels;
 
-double aggregation_kernel(queue& q, int *in_host, long *out_host, size_t size) {
+void aggregation_kernel(queue& q, int *in_host, long *out_host, size_t size) {
 
   size_t iterations =  size / 16 ;
 
- event e = q.submit([&](handler& h) {
+ q.submit([&](handler& h) {
     h.single_task<kernels>([=]() [[intel::kernel_args_restrict]] {
 
       host_ptr<int> in(in_host);
@@ -40,7 +40,6 @@ double aggregation_kernel(queue& q, int *in_host, long *out_host, size_t size) {
     });
      
   }).wait();
-     return(e.template get_profiling_info<info::event_profiling::command_end>() -
-       e.template get_profiling_info<info::event_profiling::command_start>());
+ 
    
 }

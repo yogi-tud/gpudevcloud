@@ -4,6 +4,6 @@
 
 using namespace sycl;
 
-double aggregation_kernel(queue& q, int *in_host, long *out_host, size_t size);
+void aggregation_kernel(queue& q, int *in_host, long *out_host, size_t size);
 
 #endif

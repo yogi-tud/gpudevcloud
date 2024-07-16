@@ -1,45 +1,42 @@
-//==============================================================
-// Vector Add is the equivalent of a Hello, World! sample for data parallel
-// programs. Building and running the sample verifies that your development
-// environment is setup correctly and demonstrates the use of the core features
-// of SYCL. This sample runs on both CPU and GPU (or FPGA). When run, it
-// computes on both the CPU and offload device, then compares results. If the
-// code executes on both CPU and offload device, the device name and a success
-// message are displayed. And, your development environment is setup correctly!
-//
-// For comprehensive instructions regarding SYCL Programming, go to
-// https://software.intel.com/en-us/oneapi-programming-guide and search based on
-// relevant terms noted in the comments.
-//
-// SYCL material used in the code sample:
-// •	A one dimensional array of data shared between CPU and offload device.
-// •	A device queue and kernel.
-//==============================================================
-// Copyright © Intel Corporation
-//
-// SPDX-License-Identifier: MIT
-// =============================================================
 #include <sycl/sycl.hpp>
 #include <array>
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <omp.h>
-#define NUM_THREADS 4  
 
-#if FPGA_HARDWARE || FPGA_EMULATOR || FPGA_SIMULATOR
-#include <sycl/ext/intel/fpga_extensions.hpp>
-#endif
+
 
 using namespace sycl;
 
-int n_per_thread;                   // elements per thread
-int total_threads = NUM_THREADS;    // number of threads to use  
 
+typedef enum {gpu, cpu, multithread} processmode;
+
+
+struct config
+{
+ size_t vector_size =256; //1kib for 4 byte data size
+ int omp_threads =8;
+ size_t kib=0;
+ size_t mib=0;
+ bool usm=true;
+ bool do_validation=true;
+ processmode mode=gpu;
+ std::string filename = "add_gpu.csv";
+ float share_cpu =100.f;
+};
+
+struct times
+{
+ double runtime_chrono_ms;
+ double runtime_event_ms;
+ double runtime_omp;
+};
 
 // Array size for this example.
 size_t mib = 1;
 size_t vector_size = 262144 ;
+
 size_t  gpu_percent = 0;
 
 // Create an exception handler for asynchronous SYCL exceptions
@@ -56,6 +53,94 @@ static auto exception_handler = [](sycl::exception_list e_list) {
     }
   }
 };
+
+/**
+ * -k size in KiB
+ * -m size in MiB
+ * -mode processing mode cpu, gpu, ts (multithread) 
+ * --nv no validation
+ * -o output filename
+ * -s share cpu [0 .. 100%]
+ * -omp openmp threads int
+ */
+config ParseInputParams (int argc, char** argv)
+{
+  config conf;
+ int w_argc = argc - 1; // remaining arg count
+    while (w_argc > 0) {
+        char* w_arg = argv[argc - (w_argc--)]; // working arg
+        char* n_arg = (w_argc > 0) ? argv[argc - w_argc] : NULL; // next arg
+
+        if (strcmp(w_arg, "--nv") == 0) {
+            w_argc--;
+            conf.do_validation = false;
+        
+        }
+
+        else if (strcmp(w_arg, "-k") == 0) {
+            w_argc--;
+            size_t kib = atoi(n_arg);
+            if (kib == 0) {
+                kib = 1;
+            }
+            conf.kib = kib;
+            conf.vector_size = conf.vector_size *conf.kib;
+        }
+
+        else if (strcmp(w_arg, "-m") == 0) {
+            w_argc--;
+            size_t mib = atoi(n_arg);
+            if (mib == 0) {
+                mib = 1;
+            }
+            conf.mib = mib;
+            conf.vector_size = conf.vector_size *1024 * conf.mib;
+        }
+        else if (strcmp(w_arg, "-omp") == 0) {
+            w_argc--;
+            size_t omp = atoi(n_arg);
+            if (omp == 0) {
+                omp = 1;
+            }
+            conf.omp_threads = omp;
+            
+        }
+
+         else if (strcmp(w_arg, "-mode") == 0) {
+            w_argc--;
+            std::string mode_input = n_arg;
+            
+            if(mode_input.compare("cpu") ==0)
+            conf.mode = cpu;
+
+            if(mode_input.compare("gpu") ==0)
+            conf.mode = gpu;
+
+            if(mode_input.compare("ts") ==0)
+            conf.mode = multithread;
+        }
+
+        else if (strcmp(w_arg, "-o") == 0) {
+            w_argc--;
+            std::string ofile = n_arg;
+            
+            conf.filename = ofile;
+        }
+
+        
+        else if (strcmp(w_arg, "-s") == 0) {
+            w_argc--;
+            float share_cpu  = atof(n_arg);
+            
+            
+            conf.share_cpu = share_cpu;
+        }
+
+}
+
+return conf;
+}
+
 
 //************************************
 // Vector add in SYCL on device: returns sum in 4th parameter "sum".
@@ -74,39 +159,70 @@ double VectorAdd(queue &q, const int *a, const int *b, int *sum, size_t size) {
 
   // q.parallel_for() is an asynchronous call. SYCL runtime enqueues and runs
   // the kernel asynchronously. Wait for the asynchronous call to complete.
- // e.wait();
+  e.wait();
   return(e.template get_profiling_info<info::event_profiling::command_end>() -
        e.template get_profiling_info<info::event_profiling::command_start>());
 }
 
-//************************************
-// Initialize the array from 0 to array_size - 1
-//************************************
-void InitializeArray(int *a, size_t size) {
+
+/**
+ * init array
+ * 
+ */
+void InitializeArray(int *a, size_t size, bool usm) {
   for (size_t i = 0; i < size; i++) a[i] = i;
 }
+ void print_to_file (  )
+  {
+
+
+
+
+  }
+
+  void printcfg (config conf)
+  {
+    std::cout<<"PRINT CONFIG"<<std::endl;
+    std::cout<<"mode: "<<conf.mode<<std::endl;
+    std::cout<<"kib: " <<conf.kib<<std::endl;
+    std::cout<<"mib: " <<conf.mib<<std::endl;
+    std::cout<<"vector_size: " <<conf.vector_size<<std::endl;
+    std::cout<<"output filename: " <<conf.filename<<std::endl;
+    std::cout<<"CPU Share: " <<conf.share_cpu<<std::endl;
+    std::cout<<"omp threads: " <<conf.omp_threads<<std::endl;
+
+  }
+
+  bool validate (int * a, int * b, int * sum_sequential, int * device, size_t size)
+  {
+    //perform operation on host
+    for (size_t i = 0; i < size; i++) sum_sequential[i] = a[i] + b[i];
+
+    // Verify that the two arrays are equal.
+    for (size_t i = 0; i < size; i++) {
+      if (device[i] != sum_sequential[i]) {
+        std::cout << "Vector add failed on device. at index "<<i<<"\n";
+        return false;
+      }
+    }
+    return true;
+
+  }
 
 //************************************
 // Demonstrate vector add both in sequential on CPU and in parallel on device.
 //************************************
 int main(int argc, char* argv[]) {
-  // Change array_size if it was passed as argument
-  if (argc > 1) mib = std::stoi(argv[1]);
-  vector_size *= mib ;
-  // Create device selector for the device of your interest.
-#if FPGA_EMULATOR
-  // Intel extension: FPGA emulator selector on systems without FPGA card.
-  auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-#elif FPGA_SIMULATOR
-  // Intel extension: FPGA simulator selector on systems without FPGA card.
-  auto selector = sycl::ext::intel::fpga_simulator_selector_v;
-#elif FPGA_HARDWARE
-  // Intel extension: FPGA selector on systems with FPGA card.
-  auto selector = sycl::ext::intel::fpga_selector_v;
-#else
-  // The default device selector will select the most performant device.
-  auto selector = default_selector_v;
-#endif
+
+  config conf = ParseInputParams (argc, argv);
+  printcfg(conf);
+  
+
+  
+  auto selector = sycl::cpu_selector_v;
+  // auto selector = sycl::gpu_selector_v;
+  // uncomment to use GPU
+
 
   try {
     queue q(selector,property::queue::enable_profiling{});
@@ -114,14 +230,14 @@ int main(int argc, char* argv[]) {
     // Print out the device information used for the kernel code.
     std::cout << "Running on device: "
               << q.get_device().get_info<info::device::name>() << "\n";
-    std::cout << "Vector size: " << vector_size << "\n";
+    std::cout << "Vector size: " << conf.vector_size << "\n";
 
     // Create arrays with "array_size" to store input and output data. Allocate
     // unified shared memory so that both CPU and device can access them.
-    int *a = malloc_shared<int>(vector_size, q);
-    int *b = malloc_shared<int>(vector_size, q);
-    int *sum_sequential = malloc_shared<int>(vector_size, q);
-    int *sum_parallel = malloc_shared<int>(vector_size, q);
+    int *a = malloc_shared<int>(conf.vector_size, q);
+    int *b = malloc_shared<int>(conf.vector_size, q);
+    int *sum_sequential = malloc_shared<int>(conf.vector_size, q);
+    int *sum_parallel = malloc_shared<int>(conf.vector_size, q);
 
     if ((a == nullptr) || (b == nullptr) || (sum_sequential == nullptr) ||
         (sum_parallel == nullptr)) {
@@ -135,68 +251,65 @@ int main(int argc, char* argv[]) {
     }
 
     // Initialize input arrays with values from 0 to array_size - 1
-    InitializeArray(a, vector_size);
-    InitializeArray(b, vector_size);
+    InitializeArray(a, conf.vector_size, true);
+    InitializeArray(b, conf.vector_size, true);
     int i;
-    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(static, n_per_thread)
-        for( i=0; i<vector_size; i++) {
-		sum_parallel[i] = a[i]+b[i];
-		// Which thread am I? Show who works on what for this samll example
-//		printf("Thread %d works on element%d\n", omp_get_thread_num(), i);
-        }
+    double runtime_event=-1.f;
+    double runtime_chrono=-1.f;
+    double runtime_omp =-1.f;
+    times timer;
 
-    // Compute the sum of two arrays in sequential for validation.
-    for (size_t i = 0; i < vector_size; i++) sum_sequential[i] = a[i] + b[i];
+   int n_per_thread = vector_size / conf.omp_threads;
 
-    // Vector addition in SYCL.
-      double runtime_event=-1.f;
-      double runtime_chrono=-1.f;
       auto t1 = std::chrono::steady_clock::now();
-    runtime_event =VectorAdd(q, a, b, sum_parallel, vector_size);
-     auto t2 = std::chrono::steady_clock::now();
+    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(static, n_per_thread)
+        for( i=0; i<conf.vector_size; i++) {
+		sum_parallel[i] = a[i]+b[i];
+        }
+  auto t2 = std::chrono::steady_clock::now();
+  timer.runtime_omp =std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+  
 
-    // Verify that the two arrays are equal.
-    for (size_t i = 0; i < vector_size; i++) {
-      if (sum_parallel[i] != sum_sequential[i]) {
-        std::cout << "Vector add failed on device.\n";
-        return -1;
-      }
-    }
- runtime_chrono=std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    int indices[]{0, 1, 2, (static_cast<int>(vector_size) - 1)};
-    constexpr size_t indices_size = sizeof(indices) / sizeof(int);
+ t1 = std::chrono::steady_clock::now();
+ timer.runtime_event_ms =VectorAdd(q, a, b, sum_parallel, conf.vector_size);
+    t2 = std::chrono::steady_clock::now();
+   timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    // Compute the sum of two arrays in sequential for validation.
+    
+ 
+    
+   
+  
 
-    // Print out the result of vector add.
-    for (int i = 0; i < indices_size; i++) {
-      int j = indices[i];
-      if (i == indices_size - 1) std::cout << "...\n";
-      std::cout << "[" << j << "]: " << j << " + " << j << " = "
-                << sum_sequential[j] << "\n";
-    }
-
-    // std::string filename = "add"+std::to_string(mib)+"gpu.csv";
-    std::string filename = "add_gpu.csv";
-    std::fstream myfile(filename,std::ios_base::app | std::ios_base::trunc);
-    myfile.open(filename);
+    
+    std::fstream myfile(conf.filename,std::ios_base::app | std::ios_base::trunc);
+    myfile.open(conf.filename);
 
     
     runtime_chrono=std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
      if(myfile.peek() == std::ifstream::traits_type::eof())
     {
 
-        std::ofstream myfile_out(filename);
+        std::ofstream myfile_out(conf.filename);
 
-        myfile_out << "benchmark;datasize;time_ms_event;time_ms_chrono;throughput" << std::endl;
+        myfile_out << "benchmark;datasize;time_ms_event;time_ms_chrono;time_ms_omp_chrono;omp_threads" << std::endl;
 
 
         myfile_out.close();
 
     }
      myfile.close();
-    myfile.open(filename);
+    myfile.open(conf.filename);
     myfile.seekg (0, std::ios::end);
 
-    myfile <<"usm_add_nosync"<<";"<< vector_size<<";"<<runtime_event /1000000<<";"<<runtime_chrono/1000 <<";-"<<std::endl;
+    myfile <<"usm_add"<<";"<< conf.vector_size<<";"<<timer.runtime_event_ms /1000000<<";"<<timer.runtime_chrono_ms/1000 
+    
+    <<";"<< timer.runtime_omp/1000 
+    <<";"<< conf.omp_threads
+    
+    <<";"<<std::endl;
+
+
 
     free(a, q);
     free(b, q);
@@ -209,4 +322,7 @@ int main(int argc, char* argv[]) {
 
   std::cout << "Vector add successfully completed on device.\n";
   return 0;
+
+ 
+
 }

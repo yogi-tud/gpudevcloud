@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
 
 	  aggregation_kernel(q, in, out_aggr, 16); // dummy run to program FPGA, dont care first run for measurement
     auto start = high_resolution_clock::now();
-	  double dur_dev =aggregation_kernel(q, in, out_aggr, number_CL*16);
+	  aggregation_kernel(q, in, out_aggr, number_CL*16);
     auto end = high_resolution_clock::now();
     duration<double, std::milli> diff = end - start;
     pcie_time=diff.count();
