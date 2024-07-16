@@ -1,3 +1,5 @@
 run.sh.*
 rungpu.sh.*
 *.csv
+gpu
+gpuusm
