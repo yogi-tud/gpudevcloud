@@ -21,7 +21,7 @@ struct config
  size_t mib=0;
  bool usm=true;
  bool do_validation=true;
- processmode mode=gpu;
+ processmode mode=cpu;
  std::string filename = "add_gpu.csv";
  float share_cpu =100.f;
 };
@@ -57,7 +57,7 @@ static auto exception_handler = [](sycl::exception_list e_list) {
 /**
  * -k size in KiB
  * -m size in MiB
- * -mode processing mode cpu, gpu, ts (multithread) 
+ * -mode processing mode cpu, gpu, ts (multithread)  cpu selects sycl cpu, gpu sycl gpu. ts combines gpu and omp cpu
  * --nv no validation
  * -o output filename
  * -s share cpu [0 .. 100%]
@@ -190,6 +190,7 @@ void InitializeArray(int *a, size_t size, bool usm) {
     std::cout<<"output filename: " <<conf.filename<<std::endl;
     std::cout<<"CPU Share: " <<conf.share_cpu<<std::endl;
     std::cout<<"omp threads: " <<conf.omp_threads<<std::endl;
+    
 
   }
 
@@ -218,10 +219,12 @@ int main(int argc, char* argv[]) {
   printcfg(conf);
   
 
-  
+ 
   auto selector = sycl::cpu_selector_v;
-  // auto selector = sycl::gpu_selector_v;
-  // uncomment to use GPU
+
+  if(conf.mode == processmode::gpu)
+   selector = sycl::gpu_selector_v;
+
 
 
   try {
