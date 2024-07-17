@@ -287,8 +287,8 @@ int main(int argc, char* argv[]) {
     queue q(selector,property::queue::enable_profiling{});
 
     // Print out the device information used for the kernel code.
-   // std::cout << "Running on device: "
-       //       << q.get_device().get_info<info::device::name>() << "\n";
+    std::cout << "Running on device: "
+             << q.get_device().get_info<info::device::name>() << "\n";
    // std::cout << "Vector size: " << conf.vector_size << "\n";
 
     // Create arrays with "array_size" to store input and output data. Allocate
