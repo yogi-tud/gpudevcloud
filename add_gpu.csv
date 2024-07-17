@@ -7,3 +7,6 @@ usm_add;262144;cpu;0;0.521;8;1;OpenMP only;
 usm_add;262144;cpu;0;0.545;1;1;OpenMP only;
 usm_add;262144;cpu;0;0.557;32;1;OpenMP only;
 usm_add;262144;cpu;0;0.515;64;1;OpenMP only;
+usm_add;262144;cpu;0;0.494;64;1;OpenMP only;
+usm_add;262144;cpu;0.170858;98.424;64;0.5;coprocessing;
+usm_add;262144;cpu;0.250497;97.776;64;0.1;coprocessing;
