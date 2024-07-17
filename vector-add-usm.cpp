@@ -214,7 +214,7 @@ void InitializeArray(int *a, size_t size, bool usm) {
     <<";"<< conf.omp_threads
     <<";"<< conf.share_cpu
     <<";"<< conf.processing_mode
-    <<";"<<std::endl;
+    <<std::endl;
 
 
   }
