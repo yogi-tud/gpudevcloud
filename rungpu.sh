@@ -1,33 +1,59 @@
-./gpuusm -k 1 -o omp.csv -d cpu
-./gpuusm -k 4 -o omp.csv -d cpu
-./gpuusm -k 16 -o omp.csv -d cpu
-./gpuusm -k 32 -o omp.csv -d cpu
-./gpuusm -k 128 -o omp.csv -d cpu
-./gpuusm -k 512 -o omp.csv -d cpu
-./gpuusm -m 1 -o omp.csv -d cpu
-./gpuusm -m 4 -o omp.csv -d cpu
-./gpuusm -m 16 -o omp.csv -d cpu
-./gpuusm -m 32 -o omp.csv -d cpu
-./gpuusm -m 64 -o omp.csv -d cpu
-./gpuusm -m 128 -o omp.csv -d cpu
-./gpuusm -m 256 -o omp.csv -d cpu
-./gpuusm -m 512 -o omp.csv -d cpu
-./gpuusm -m 1024 -o omp.csv -d cpu
-./gpuusm -m 2048 -o omp.csv -d cpu
-./gpuusm -k 1 -o omp.csv -d gpu
-./gpuusm -k 4 -o omp.csv -d gpu
-./gpuusm -k 16 -o omp.csv -d gpu
-./gpuusm -k 32 -o omp.csv -d gpu
-./gpuusm -k 128 -o omp.csv -d gpu
-./gpuusm -k 512 -o omp.csv -d gpu
-./gpuusm -m 1 -o omp.csv -d gpu
-./gpuusm -m 4 -o omp.csv -d gpu
-./gpuusm -m 16 -o omp.csv -d gpu
-./gpuusm -m 32 -o omp.csv -d gpu
-./gpuusm -m 64 -o omp.csv -d gpu
-./gpuusm -m 128 -o omp.csv -d gpu
-./gpuusm -m 256 -o omp.csv -d gpu
-./gpuusm -m 512 -o omp.csv -d gpu
-./gpuusm -m 1024 -o omp.csv -d gpu
-./gpuusm -m 2048 -o omp.csv -d gpu
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.05
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.1
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.25
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.5
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.75
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.9
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.95
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.05
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.1
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.25
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.5
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.75
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.9
+./gpuusm -m 512 -o copro.csv -d gpu -s 0.95
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.05
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.1
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.25
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.5
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.75
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.9
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.95
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.05
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.1
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.25
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.5
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.75
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.9
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0.95
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.05
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.1
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.25
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.5
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.75
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.9
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.95
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.05
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.1
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.25
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.5
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.75
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.9
+./gpuusm -m 16 -o copro.csv -d gpu -s 0.95
+./gpuusm -m 16 -o copro.csv -d gpu -s 1
+./gpuusm -m 16 -o copro.csv -d gpu -s 1
+./gpuusm -m 512 -o copro.csv -d gpu -s 1
+./gpuusm -m 512 -o copro.csv -d gpu -s 1
+./gpuusm -m 1024 -o copro.csv -d gpu -s 1
+./gpuusm -m 1024 -o copro.csv -d gpu -s 1
+./gpuusm -m 16 -o copro.csv -d gpu -s 0
+./gpuusm -m 16 -o copro.csv -d gpu -s 0
+./gpuusm -m 512 -o copro.csv -d gpu -s 0
+./gpuusm -m 512 -o copro.csv -d gpu -s 0
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0
+./gpuusm -m 1024 -o copro.csv -d gpu -s 0
+
+
+
+
 

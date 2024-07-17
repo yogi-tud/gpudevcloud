@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <omp.h>
+#include <thread>
 
 
 
@@ -24,14 +25,16 @@ struct config
  hardware hw=cpu;
  std::string device_str = "cpu";
  std::string filename = "add_gpu.csv";
- float share_cpu =100.f;
+ float share_cpu =1.f;
+ size_t start_index=0;
+ std::string processing_mode ="";
 };
 
 struct times
 {
- double runtime_chrono_ms;
- double runtime_event_ms;
- double runtime_omp;
+ double runtime_chrono_ms=0.f;
+ double runtime_event_ms=0.f;
+ double runtime_omp=0.f;
 };
 
 // Array size for this example.
@@ -61,7 +64,7 @@ static auto exception_handler = [](sycl::exception_list e_list) {
  * -d device sycl cpu or gpu
  * --nv no validation
  * -o output filename
- * -s share cpu [0 .. 100%]
+ * -s share cpu factor 0..1
  * -omp openmp threads int
  */
 config ParseInputParams (int argc, char** argv)
@@ -141,6 +144,7 @@ config ParseInputParams (int argc, char** argv)
             float share_cpu  = atof(n_arg);
             
             
+            
             conf.share_cpu = share_cpu;
         }
 
@@ -180,10 +184,37 @@ double VectorAdd(queue &q, const int *a, const int *b, int *sum, size_t size) {
 void InitializeArray(int *a, size_t size, bool usm) {
   for (size_t i = 0; i < size; i++) a[i] = i;
 }
- void print_to_file (  )
+
+ void print_to_file (config conf, times timer  )
   {
 
+ std::fstream myfile(conf.filename,std::ios_base::app | std::ios_base::trunc);
+    myfile.open(conf.filename);
 
+    
+    
+     if(myfile.peek() == std::ifstream::traits_type::eof())
+    {
+
+        std::ofstream myfile_out(conf.filename);
+
+        myfile_out << "benchmark;datasize;device;time_ms_event;time_ms_chrono;omp_threads;cpu_share;mode" << std::endl;
+
+
+        myfile_out.close();
+
+    }
+     myfile.close();
+    myfile.open(conf.filename);
+    myfile.seekg (0, std::ios::end);
+
+    myfile <<"usm_add"<<";"<< conf.vector_size
+    <<";"<<conf.device_str
+    <<";"<<timer.runtime_event_ms /1000000<<";"<<timer.runtime_chrono_ms/1000 
+    <<";"<< conf.omp_threads
+    <<";"<< conf.share_cpu
+    <<";"<< conf.processing_mode
+    <<";"<<std::endl;
 
 
   }
@@ -197,7 +228,9 @@ void InitializeArray(int *a, size_t size, bool usm) {
     std::cout<<"vector_size: " <<conf.vector_size<<std::endl;
     std::cout<<"output filename: " <<conf.filename<<std::endl;
     std::cout<<"CPU Share: " <<conf.share_cpu<<std::endl;
+    std::cout<<"GPU Start index: " <<conf.start_index<<std::endl;
     std::cout<<"omp threads: " <<conf.omp_threads<<std::endl;
+    std::cout<<"Processing mode: " <<conf.processing_mode<<std::endl;
     
 
   }
@@ -211,6 +244,7 @@ void InitializeArray(int *a, size_t size, bool usm) {
     for (size_t i = 0; i < size; i++) {
       if (data_device[i] != sum_sequential[i]) {
         std::cout << "Vector add failed on device. at index "<<i<<"\n";
+        std::cout <<" device |  host "<< data_device[i]<<" "<< sum_sequential[i]<<std::endl;
         return false;
       }
     }
@@ -218,16 +252,35 @@ void InitializeArray(int *a, size_t size, bool usm) {
 
   }
 
-//************************************
-// Demonstrate vector add both in sequential on CPU and in parallel on device.
-//************************************
+  void omp_add (int * a, int * b, int * sum_parallel, config conf)
+  {
+    int n_per_thread = vector_size / conf.omp_threads;
+    int i;
+     #pragma omp parallel num_threads(conf.omp_threads)
+  {
+    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(dynamic, n_per_thread), 
+        for( i=0; i<conf.start_index; i++) {
+		sum_parallel[i] = a[i]+b[i];
+        }
+  }
+  }
+
+   
 int main(int argc, char* argv[]) {
 
   config conf = ParseInputParams (argc, argv);
-  printcfg(conf);
-  
 
- 
+  // split input data for gpu and cpu. start index is first gpu value
+  //cpu calculates from 0 to start_index -1. gpu start-index to vector size-1
+  conf.start_index = (conf.vector_size-1) * conf.share_cpu ; 
+  if (conf.share_cpu >= 0.99f)
+  {
+    conf.start_index = conf.vector_size;
+  }
+
+
+  //printcfg(conf);
+  
   auto selector = sycl::cpu_selector_v;
 
   if(conf.hw == gpu)
@@ -265,65 +318,54 @@ int main(int argc, char* argv[]) {
     InitializeArray(a, conf.vector_size, true);
     InitializeArray(b, conf.vector_size, true);
     int i;
-    double runtime_event=-1.f;
-    double runtime_chrono=-1.f;
-    double runtime_omp =-1.f;
+
     times timer;
 
-   int n_per_thread = vector_size / conf.omp_threads;
+   int n_per_thread = conf.vector_size / conf.omp_threads;
+  auto total1 = std::chrono::steady_clock::now();
+  auto total2 = std::chrono::steady_clock::now();
+     
+      //Co Processing
+      if(conf.start_index>= 1 && conf.start_index <  conf.vector_size-1)
+      {
+       
+        conf.processing_mode = "coprocessing";
+        total1 = std::chrono::steady_clock::now();
+std::thread tt(omp_add, a,b,sum_parallel,conf);
+ timer.runtime_event_ms =VectorAdd(q, a+conf.start_index, b+conf.start_index, sum_parallel+conf.start_index, conf.vector_size-conf.start_index);
+   tt.join();     
+   total2 = std::chrono::steady_clock::now();
+ timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(total2 - total1).count();
 
-      auto t1 = std::chrono::steady_clock::now();
-       #pragma omp parallel num_threads(conf.omp_threads)
-  {
-    #pragma omp parallel for shared(a, b, sum_parallel) private(i) schedule(dynamic, n_per_thread), 
-        for( i=0; i<conf.vector_size; i++) {
-		sum_parallel[i] = a[i]+b[i];
-        }
-  }
-  auto t2 = std::chrono::steady_clock::now();
-  timer.runtime_omp =std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-  
+      }
+      //only Sycl
+      else if (conf.start_index == 0)
+      {
+        conf.processing_mode = "Sycl only";
+        total1 = std::chrono::steady_clock::now();
+         timer.runtime_event_ms =VectorAdd(q, a+conf.start_index, b+conf.start_index, sum_parallel+conf.start_index, conf.vector_size-conf.start_index);
+         total2 = std::chrono::steady_clock::now();
+         timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(total2 - total1).count();
 
- t1 = std::chrono::steady_clock::now();
- timer.runtime_event_ms =VectorAdd(q, a, b, sum_parallel, conf.vector_size);
-    t2 = std::chrono::steady_clock::now();
-   timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    // Compute the sum of two arrays in sequential for validation.
-    
+      }
+      //only OMP
+      else if (conf.start_index >= conf.vector_size-1)
+      {
+        conf.processing_mode = "OpenMP only";
+          total1 = std::chrono::steady_clock::now();
+        std::thread tt(omp_add, a,b,sum_parallel,conf);
+        tt.join();     
+   total2 = std::chrono::steady_clock::now();
+ timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(total2 - total1).count();
+ }
+      
+
+
+   validate(a,b,sum_sequential,sum_parallel, conf.vector_size);
  
-    
-   
-  
-
-    
-    std::fstream myfile(conf.filename,std::ios_base::app | std::ios_base::trunc);
-    myfile.open(conf.filename);
-
-    
-    runtime_chrono=std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-     if(myfile.peek() == std::ifstream::traits_type::eof())
-    {
-
-        std::ofstream myfile_out(conf.filename);
-
-        myfile_out << "benchmark;datasize;device;time_ms_event;time_ms_chrono;time_ms_omp_chrono;omp_threads" << std::endl;
 
 
-        myfile_out.close();
-
-    }
-     myfile.close();
-    myfile.open(conf.filename);
-    myfile.seekg (0, std::ios::end);
-
-    myfile <<"usm_add"<<";"<< conf.vector_size
-    <<";"<<conf.device_str
-    <<";"<<timer.runtime_event_ms /1000000<<";"<<timer.runtime_chrono_ms/1000 
-    <<";"<< timer.runtime_omp/1000 
-    <<";"<< conf.omp_threads
-    
-    <<";"<<std::endl;
-
+  print_to_file(conf,timer);
 
 
     free(a, q);

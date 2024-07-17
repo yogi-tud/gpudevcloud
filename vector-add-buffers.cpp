@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
   InitializeVector(a);
   InitializeVector(b);
   double runtime_chrono=-1.f;
-   double runtime_event=-1.f;
+  double runtime_event=-1.f;
 
   
     queue q(selector,property::queue::enable_profiling{});

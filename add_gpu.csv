@@ -1,12 +1,4 @@
-benchmark;datasize;time_ms_event;time_ms_chrono;time_ms_omp_chrono;omp_threads
-usm_add;33554432;22.3173;119.829;43.707;1;
-usm_add;33554432;21.3958;118.046;43.914;2;
-usm_add;33554432;21.529;117.862;43.591;4;
-usm_add;33554432;24.8709;123.695;43.636;8;
-usm_add;33554432;21.3842;116.857;43.844;16;
-usm_add;33554432;21.57;117.728;43.579;32;
-usm_add;33554432;21.6805;117.019;43.699;64;
-usm_add;262144;0.302751;98.872;0.35;8;
-usm_add;262144;1;0.284758;99.304;0.34;8;
-usm_add;262144;cpu;0.320414;100.458;0.351;8;
-usm_add;262144;gpu;0.307939;98.956;0.347;8;
+benchmark;datasize;device;time_ms_event;time_ms_chrono;omp_threads;cpu_share;mode
+usm_add;16777216;cpu;9.06549;106.301;8;0;Sycl only;
+usm_add;16777216;cpu;4.86287;103.005;8;0.5;coprocessing;
+usm_add;16777216;cpu;0;22.93;8;1;OpenMP only;
