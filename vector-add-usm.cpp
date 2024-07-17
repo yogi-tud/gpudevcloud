@@ -154,33 +154,19 @@ return conf;
 }
 
 
-//************************************
-// Vector add in SYCL on device: returns sum in 4th parameter "sum".
-//************************************
-double VectorAdd(queue &q, const int *a, const int *b, int *sum, size_t size) {
-  // Create the range object for the arrays.
-  range<1> num_items{size};
 
-  // Use parallel_for to run vector addition in parallel on device. This
-  // executes the kernel.
-  //    1st parameter is the number of work items.
-  //    2nd parameter is the kernel, a lambda that specifies what to do per
-  //    work item. the parameter of the lambda is the work item id.
-  // SYCL supports unnamed lambda kernel by default.
+double VectorAdd(queue &q, const int *a, const int *b, int *sum, size_t size) {
+
+  range<1> num_items{size};
   auto e = q.parallel_for(num_items, [=](auto i) { sum[i] = a[i] + b[i]; });
 
-  // q.parallel_for() is an asynchronous call. SYCL runtime enqueues and runs
-  // the kernel asynchronously. Wait for the asynchronous call to complete.
+ 
   e.wait();
   return(e.template get_profiling_info<info::event_profiling::command_end>() -
        e.template get_profiling_info<info::event_profiling::command_start>());
 }
 
 
-/**
- * init array
- * 
- */
 void InitializeArray(int *a, size_t size, bool usm) {
   for (size_t i = 0; i < size; i++) a[i] = i;
 }
@@ -219,6 +205,9 @@ void InitializeArray(int *a, size_t size, bool usm) {
 
   }
 
+/**
+ * print config parameter for benchmark to console
+ */
   void printcfg (config conf)
   {
     std::cout<<"PRINT CONFIG"<<std::endl;
@@ -235,6 +224,11 @@ void InitializeArray(int *a, size_t size, bool usm) {
 
   }
 
+/**
+ * Validate benchmark by performing same operation on cpu
+ * return false if data is different from benchmark
+ * return true if no errors found
+ */
   bool validate (int * a, int * b, int * sum_sequential, int * data_device, size_t size)
   {
     //perform operation on host
@@ -293,9 +287,9 @@ int main(int argc, char* argv[]) {
     queue q(selector,property::queue::enable_profiling{});
 
     // Print out the device information used for the kernel code.
-    std::cout << "Running on device: "
-              << q.get_device().get_info<info::device::name>() << "\n";
-    std::cout << "Vector size: " << conf.vector_size << "\n";
+   // std::cout << "Running on device: "
+       //       << q.get_device().get_info<info::device::name>() << "\n";
+   // std::cout << "Vector size: " << conf.vector_size << "\n";
 
     // Create arrays with "array_size" to store input and output data. Allocate
     // unified shared memory so that both CPU and device can access them.
@@ -321,8 +315,10 @@ int main(int argc, char* argv[]) {
     int i;
 
     times timer;
-
+//warmup RUN!
+  timer.runtime_event_ms =VectorAdd(q, a, b, sum_parallel, conf.vector_size);
    int n_per_thread = conf.vector_size / conf.omp_threads;
+  
   auto total1 = std::chrono::steady_clock::now();
   auto total2 = std::chrono::steady_clock::now();
      
@@ -344,7 +340,7 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
       {
         conf.processing_mode = "Sycl only";
         total1 = std::chrono::steady_clock::now();
-         timer.runtime_event_ms =VectorAdd(q, a+conf.start_index, b+conf.start_index, sum_parallel+conf.start_index, conf.vector_size-conf.start_index);
+         timer.runtime_event_ms =VectorAdd(q, a, b, sum_parallel, conf.vector_size);
          total2 = std::chrono::steady_clock::now();
          timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(total2 - total1).count();
 
@@ -362,7 +358,10 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
       
 
 
-   validate(a,b,sum_sequential,sum_parallel, conf.vector_size);
+   if(!validate(a,b,sum_sequential,sum_parallel, conf.vector_size))
+   {
+    return -1; //terminate benchmark without writing measurements into csv if validation fails.
+   }
  
 
 
@@ -378,7 +377,7 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
     std::terminate();
   }
 
-  std::cout << "Vector add successfully completed on device.\n";
+ // std::cout << "Vector add successfully completed on device.\n";
   return 0;
 
  

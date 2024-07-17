@@ -34,7 +34,7 @@ using namespace sycl;
 size_t num_repetitions = 1;
 size_t mib = 1;
 // size in mib for 32 bit elements
-size_t vector_size = 262144  ; 
+size_t vector_size = 1024  ; 
 
 typedef std::vector<int> IntVector; 
 
