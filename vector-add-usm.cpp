@@ -254,7 +254,8 @@ void InitializeArray(int *a, size_t size, bool usm) {
 
   void omp_add (int * a, int * b, int * sum_parallel, config conf)
   {
-    int n_per_thread = vector_size / conf.omp_threads;
+    int n_per_thread = conf.vector_size / conf.omp_threads;
+    //std::cout<< "ele per thread, threads" << n_per_thread <<"  "<<conf.omp_threads<<std::endl;
     int i;
      #pragma omp parallel num_threads(conf.omp_threads)
   {

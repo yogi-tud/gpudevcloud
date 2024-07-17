@@ -2,3 +2,8 @@ benchmark;datasize;device;time_ms_event;time_ms_chrono;omp_threads;cpu_share;mod
 usm_add;16777216;cpu;9.06549;106.301;8;0;Sycl only;
 usm_add;16777216;cpu;4.86287;103.005;8;0.5;coprocessing;
 usm_add;16777216;cpu;0;22.93;8;1;OpenMP only;
+usm_add;16777216;cpu;0;22.794;8;1;OpenMP only;
+usm_add;262144;cpu;0;0.521;8;1;OpenMP only;
+usm_add;262144;cpu;0;0.545;1;1;OpenMP only;
+usm_add;262144;cpu;0;0.557;32;1;OpenMP only;
+usm_add;262144;cpu;0;0.515;64;1;OpenMP only;
