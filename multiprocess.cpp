@@ -5,6 +5,11 @@
 #include <fstream>
 #include <omp.h>
 #include <thread>
+#include <chrono>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+
 
 
 
@@ -28,6 +33,7 @@ struct config
  float share_cpu =1.f;
  size_t start_index=0;
  std::string processing_mode ="";
+ bool write =false;
 };
 
 struct times
@@ -136,6 +142,10 @@ config ParseInputParams (int argc, char** argv)
             std::string ofile = n_arg;
             
             conf.filename = ofile;
+        }
+        else if (strcmp(w_arg, "-w") == 0) {
+            w_argc--;
+            conf.write = true;
         }
 
         
@@ -318,7 +328,65 @@ void benchmark(config conf)
 //warmup RUN!
   timer.runtime_event_ms =VectorAdd(q, a, b, sum_parallel, conf.vector_size);
    int n_per_thread = conf.vector_size / conf.omp_threads;
+
+ if(conf.write)
+  {
+     std::cout <<"write process"<<std::endl;
+ 
+
+// ftok to generate unique key
+
+    key_t key = ftok("shmfile", 65);
+
+     // shmat to attach to shared memory
+    size_t element_count = 5;
+    //uint64_t* data =(uint64_t*) malloc(element_count*sizeof(uint64_t));
+
+    // shmget returns an identifier in shmid
+
+    int shmid = shmget(key, 1024, 0666 | IPC_CREAT);
+
+   //int *a = malloc_shared<int>(conf.vector_size, q);
+
+    uint64_t* data = (uint64_t*)shmat(shmid, (void*)0, 0);
+
+    
+    //write start signal for experiment to reading process
+    data[0]=1;
+	
+	}
+
+else if (!conf.write)
+{
+    
+
+    std::cout <<"READ process"<<std::endl;
+
+
+     // ftok to generate unique key
+    key_t key = ftok("shmfile", 65);
+
+    // shmget returns an identifier in shmid
+    int shmid = shmget(key, 1024, 0666 | IPC_CREAT);
+
+    // shmat to attach to shared memory
+    uint64_t* data = (uint64_t*)shmat(shmid, (void*)0, 0);
+
+    while(data[0] != 1)
+    {
+       // std::cout << "Waiting for data" << std::endl;
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+    }
+   
   
+  
+
+   
+}
+
+  std::cout << "Timer at start: " << std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000 <<std::endl;
+
+ // auto start_test = std::chrono::steady_clock::now();
   auto total1 = std::chrono::steady_clock::now();
   auto total2 = std::chrono::steady_clock::now();
      
@@ -355,6 +423,8 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
    total2 = std::chrono::steady_clock::now();
  timer.runtime_chrono_ms =std::chrono::duration_cast<std::chrono::microseconds>(total2 - total1).count();
  }
+
+      
       
 
 
@@ -377,17 +447,30 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
     std::cout << "An exception is caught while adding two vectors.\n";
     std::terminate();
   }
+
+  
+
 }
    
+
+
 int main(int argc, char* argv[]) {
+    config conf = ParseInputParams (argc, argv);
 
-  config conf = ParseInputParams (argc, argv);
+    
+    benchmark(conf);
 
-  benchmark(conf);
 
- // std::cout << "Vector add successfully completed on device.\n";
-  return 0;
+     std::this_thread::sleep_for(std::chrono::seconds(3));
+       // shmget returns an identifier in shmid
 
- 
+    key_t key = ftok("shmfile", 65);
+    int shmid = shmget(key, 1024, 0666 | IPC_CREAT);
 
+    shmctl(shmid, IPC_RMID, NULL);
+
+
+
+return 0;
 }
+
