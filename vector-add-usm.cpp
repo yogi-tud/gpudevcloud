@@ -383,6 +383,10 @@ int main(int argc, char* argv[]) {
 
   config conf = ParseInputParams (argc, argv);
 
+  
+  //set params
+  
+
   benchmark(conf);
 
  // std::cout << "Vector add successfully completed on device.\n";
