@@ -13,19 +13,19 @@ using namespace sycl;
 
 typedef enum {gpu, cpu, multithread} hardware;
 
-
+//CHANGE parameter here
 struct config
 {
- size_t vector_size =256; //1kib for 4 byte data size
+ size_t vector_size =1024*256; //define size as number of elements (4 byte int)
  int omp_threads =8;
  size_t kib=0;
- size_t mib=0;
+ size_t mib=1024;
  bool usm=true;
  bool do_validation=true;
- hardware hw=cpu;
+ hardware hw=gpu;  //cpu alternative
  std::string device_str = "cpu";
  std::string filename = "add_gpu.csv";
- float share_cpu =1.f;
+ float share_cpu =0.5f;
  size_t start_index=0;
  std::string processing_mode ="";
 };
@@ -246,10 +246,10 @@ void InitializeArray(int *a, size_t size, bool usm) {
 
   }
 
+  //run openmp add on cpu
   void omp_add (int * a, int * b, int * sum_parallel, config conf)
   {
     int n_per_thread = conf.vector_size / conf.omp_threads;
-    //std::cout<< "ele per thread, threads" << n_per_thread <<"  "<<conf.omp_threads<<std::endl;
     int i;
      #pragma omp parallel num_threads(conf.omp_threads)
   {
@@ -260,8 +260,9 @@ void InitializeArray(int *a, size_t size, bool usm) {
   }
   }
 
-void benchmark(config conf)
+void benchmark(config conf, int * a_in, int * b_in, int * c_in, size_t vectorsize)
 {
+  conf.vector_size=vectorsize;
 // split input data for gpu and cpu. start index is first gpu value
   //cpu calculates from 0 to start_index -1. gpu start-index to vector size-1
   conf.start_index = (conf.vector_size-1) * conf.share_cpu ; 
@@ -273,30 +274,28 @@ void benchmark(config conf)
 
   //printcfg(conf);
   
+  //select CPU default, GPU else
   auto selector = sycl::cpu_selector_v;
-
   if(conf.hw == gpu)
    selector = sycl::gpu_selector_v;
 
 
-
+   //allocate unified memory buffer
   try {
     queue q(selector,property::queue::enable_profiling{});
 
     // Print out the device information used for the kernel code.
     std::cout << "Running on device: "
              << q.get_device().get_info<info::device::name>() << "\n";
-   // std::cout << "Vector size: " << conf.vector_size << "\n";
-
-    // Create arrays with "array_size" to store input and output data. Allocate
-    // unified shared memory so that both CPU and device can access them.
+  
+    //allocate unified memory
     int *a = malloc_shared<int>(conf.vector_size, q);
-
     int *b = malloc_shared<int>(conf.vector_size, q);
 
     int *sum_sequential = malloc_shared<int>(conf.vector_size, q);
     int *sum_parallel = malloc_shared<int>(conf.vector_size, q);
 
+  //exit if allocation failed
     if ((a == nullptr) || (b == nullptr) || (sum_sequential == nullptr) ||
         (sum_parallel == nullptr)) {
       if (a != nullptr) free(a, q);
@@ -305,7 +304,6 @@ void benchmark(config conf)
       if (sum_parallel != nullptr) free(sum_parallel, q);
 
       std::cout << "Shared memory allocation failure.\n";
-      //return -1;
       exit(-1);
     }
 
@@ -313,6 +311,13 @@ void benchmark(config conf)
     InitializeArray(a, conf.vector_size, true);
     InitializeArray(b, conf.vector_size, true);
     int i;
+
+    //Copy over input arrays to unified mem
+    for(int i =0; i < conf.vector_size;i++)
+    {
+      a[i] = a_in[i];
+       b[i] =b_in[i];
+    }
 
     times timer;
 //warmup RUN!
@@ -360,7 +365,7 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
 
    if(!validate(a,b,sum_sequential,sum_parallel, conf.vector_size))
    {
-   // return -1; //terminate benchmark without writing measurements into csv if validation fails.
+   // return -1 if validation failed
    exit(-1);
    }
  
@@ -384,10 +389,15 @@ int main(int argc, char* argv[]) {
   config conf = ParseInputParams (argc, argv);
 
   
-  //set params
+  //set params, generate random in main. throw in data with pointers
+  //default behavior half gpu half cpu
   
+  int * in_a;
+  int * in_b;
+  int * out_c;
+  size_t vector_size =1024*256;
 
-  benchmark(conf);
+  benchmark(conf,in_a,  in_b,  out_c,vector_size);
 
  // std::cout << "Vector add successfully completed on device.\n";
   return 0;
