@@ -27,7 +27,7 @@ struct config
  std::string filename = "add_gpu.csv";
  float share_cpu =0.5f;
  size_t start_index=0;
- std::string processing_mode ="";
+ std::string processing_mode ="Co-processing";
 };
 
 struct times
@@ -272,7 +272,7 @@ void benchmark(config conf, int * a_in, int * b_in, int * c_in, size_t vectorsiz
   }
 
 
-  //printcfg(conf);
+  printcfg(conf);
   
   //select CPU default, GPU else
   auto selector = sycl::cpu_selector_v;
@@ -391,11 +391,18 @@ int main(int argc, char* argv[]) {
   
   //set params, generate random in main. throw in data with pointers
   //default behavior half gpu half cpu
+  size_t vector_size =1024*256; //1 Gib per array int
+  int * in_a=(int *)malloc(sizeof(int)*vector_size);
+  int * in_b=(int *)malloc(sizeof(int)*vector_size);
+  int * out_c=(int *)malloc(sizeof(int)*vector_size);
   
-  int * in_a;
-  int * in_b;
-  int * out_c;
-  size_t vector_size =1024*256;
+
+  //genreate data, replace by dapohne input
+  InitializeArray(in_a,vector_size,false);
+  InitializeArray(in_b,vector_size,false);
+  
+
+  
 
   benchmark(conf,in_a,  in_b,  out_c,vector_size);
 

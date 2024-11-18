@@ -18,3 +18,10 @@ usm_add;256;cpu;0.026518;1.205;8;1;OpenMP only
 usm_add;256;gpu;0.134144;0.172;8;1;OpenMP only
 usm_add;256;cpu;0.013771;1.121;8;1;OpenMP only
 usm_add;256;gpu;0.115648;1.147;8;1;OpenMP only
+usm_add;262144;cpu;0.018433;0.668;8;0.5;coprocessing
+usm_add;262144;cpu;0.011264;0.669;8;0.5;coprocessing
+usm_add;262144;cpu;0.010209;0.67;8;0.5;coprocessing
+usm_add;262144;cpu;0.011297;0.704;8;0.5;coprocessing
+usm_add;262144;cpu;0.009215;0.732;8;0.5;coprocessing
+usm_add;1048576;cpu;0.036863;1.907;8;0.5;coprocessing
+usm_add;1048576;cpu;0.047135;1.876;8;0.5;coprocessing
