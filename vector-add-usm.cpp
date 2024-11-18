@@ -370,6 +370,11 @@ std::thread tt(omp_add, a,b,sum_parallel,conf);
    }
  
 
+  //copy over to daphne output
+  for(int i =0;i<vector_size;i++)
+  {
+    c_in[i] = c[i];
+  }
 
   print_to_file(conf,timer);
 
